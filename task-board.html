@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - Kanban Board</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e27;
+      --bg-secondary: #151937;
+      --bg-card: #1a1f3a;
+      --accent-blue: #00d4ff;
+      --accent-purple: #a78bfa;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --border-color: #2d3551;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      min-height: 100vh;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+        var(--bg-primary);
+    }
+
+    /* Login Page */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 3rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow);
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .login-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 0.875rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      animation: shake 0.5s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Main Board */
+    .main-content {
+      padding: 2rem;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .controls-section {
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    /* Board Layout */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .column {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .column-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .column-badge {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .column.todo .column-title::before {
+      content: '●';
+      color: var(--accent-blue);
+      font-size: 1.5rem;
+    }
+
+    .column.doing .column-title::before {
+      content: '●';
+      color: var(--accent-orange);
+      font-size: 1.5rem;
+    }
+
+    .column.done .column-title::before {
+      content: '●';
+      color: var(--accent-green);
+      font-size: 1.5rem;
+    }
+
+    .tasks-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: move;
+      transition: all 0.2s;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .task-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-color: var(--accent-blue);
+    }
+
+    .task-card.dragging {
+      opacity: 0.5;
+      transform: rotate(2deg);
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .task-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .task-card:hover .task-actions {
+      opacity: 1;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .task-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .task-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .priority-high {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .priority-medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-orange);
+      border: 1px solid var(--accent-orange);
+    }
+
+    .priority-low {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .task-due {
+      background: rgba(167, 139, 250, 0.2);
+      color: var(--accent-purple);
+      border: 1px solid var(--accent-purple);
+    }
+
+    .task-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .task-tag {
+      background: rgba(0, 212, 255, 0.1);
+      color: var(--accent-blue);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 550px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: scaleIn 0.3s ease;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      color: var(--text-primary);
+      transform: rotate(90deg);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 100px;
+      transition: all 0.2s;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    /* Activity Log */
+    .activity-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .activity-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-card);
+      border-radius: 8px;
+      animation: slideInRight 0.3s ease;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .activity-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .activity-icon.created { background: var(--accent-green); }
+    .activity-icon.edited { background: var(--accent-blue); }
+    .activity-icon.moved { background: var(--accent-orange); }
+    .activity-icon.deleted { background: var(--accent-red); }
+
+    .activity-text {
+      flex: 1;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .activity-time {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .controls-section {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Storage helper
+    const storage = {
+      get: (key, defaultValue = null) => {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : defaultValue;
+        } catch {
+          return defaultValue;
+        }
+      },
+      set: (key, value) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+          console.error('Storage error:', e);
+        }
+      },
+      remove: (key) => {
+        localStorage.removeItem(key);
+      }
+    };
+
+    // Constants
+    const CREDENTIALS = {
+      email: 'intern@demo.com',
+      password: 'intern123'
+    };
+
+    const COLUMNS = ['todo', 'doing', 'done'];
+    const PRIORITIES = ['low', 'medium', 'high'];
+
+    // Login Component
+    function LoginPage({ onLogin }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [rememberMe, setRememberMe] = useState(false);
+      const [error, setError] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (email === CREDENTIALS.email && password === CREDENTIALS.password) {
+          onLogin(rememberMe);
+        } else {
+          setError('Invalid email or password. Please try again.');
+        }
+      };
+
+      return (
+        <div className="login-container">
+          <div className="login-card">
+            <div className="login-header">
+              <h1 className="login-title">TaskFlow</h1>
+              <p className="login-subtitle">Sign in to manage your tasks</p>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="intern@demo.com"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  className="checkbox-input"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <label htmlFor="remember" className="checkbox-label">
+                  Remember me
+                </label>
+              </div>
+
+              <button type="submit" className="btn btn-primary">
+                Sign In
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Task Modal Component
+    function TaskModal({ task, onSave, onClose }) {
+      const [formData, setFormData] = useState({
+        title: task?.title || '',
+        description: task?.description || '',
+        priority: task?.priority || 'medium',
+        dueDate: task?.dueDate || '',
+        tags: task?.tags?.join(', ') || '',
+      });
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.title.trim()) return;
+
+        const taskData = {
+          ...formData,
+          tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+        };
+
+        onSave(taskData);
+      };
+
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{task ? 'Edit Task' : 'New Task'}</h2>
+              <button className="close-btn" onClick={onClose}>×</button>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Title *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter task title"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-textarea"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Add details about this task..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Priority</label>
+                <select
+                  className="filter-select"
+                  style={{ width: '100%' }}
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Due Date</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g. frontend, urgent, bug"
+                />
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="btn btn-secondary" onClick={onClose} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  {task ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Task Card Component
+    function TaskCard({ task, onEdit, onDelete, onDragStart, onDragEnd }) {
+      return (
+        <div
+          className="task-card"
+          draggable
+          onDragStart={(e) => onDragStart(e, task)}
+          onDragEnd={onDragEnd}
+        >
+          <div className="task-header">
+            <div className="task-title">{task.title}</div>
+            <div className="task-actions">
+              <button className="icon-btn" onClick={() => onEdit(task)} title="Edit">
+                ✏️
+              </button>
+              <button className="icon-btn" onClick={() => onDelete(task)} title="Delete">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          {task.description && (
+            <div className="task-description">{task.description}</div>
+          )}
+
+          <div className="task-meta">
+            <span className={`task-badge priority-${task.priority}`}>
+              {task.priority.toUpperCase()}
+            </span>
+            {task.dueDate && (
+              <span className="task-badge task-due">
+                📅 {new Date(task.dueDate).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+
+          {task.tags && task.tags.length > 0 && (
+            <div className="task-tags">
+              {task.tags.map((tag, idx) => (
+                <span key={idx} className="task-tag">#{tag}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Main App Component
+    function TaskBoard() {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [tasks, setTasks] = useState([]);
+      const [activities, setActivities] = useState([]);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterPriority, setFilterPriority] = useState('all');
+      const [sortByDate, setSortByDate] = useState(false);
+      const [showModal, setShowModal] = useState(false);
+      const [editingTask, setEditingTask] = useState(null);
+      const [draggedTask, setDraggedTask] = useState(null);
+
+      // Check authentication on mount
+      useEffect(() => {
+        const isLoggedIn = storage.get('isAuthenticated', false);
+        setIsAuthenticated(isLoggedIn);
+      }, []);
+
+      // Load tasks and activities
+      useEffect(() => {
+        if (isAuthenticated) {
+          const savedTasks = storage.get('tasks', []);
+          const savedActivities = storage.get('activities', []);
+          setTasks(savedTasks);
+          setActivities(savedActivities);
+        }
+      }, [isAuthenticated]);
+
+      // Save tasks
+      useEffect(() => {
+        if (isAuthenticated && tasks.length >= 0) {
+          storage.set('tasks', tasks);
+        }
+      }, [tasks, isAuthenticated]);
+
+      // Save activities
+      useEffect(() => {
+        if (isAuthenticated && activities.length >= 0) {
+          storage.set('activities', activities);
+        }
+      }, [activities, isAuthenticated]);
+
+      const handleLogin = (rememberMe) => {
+        setIsAuthenticated(true);
+        storage.set('isAuthenticated', rememberMe);
+      };
+
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        storage.remove('isAuthenticated');
+      };
+
+      const addActivity = (type, taskTitle) => {
+        const activity = {
+          id: Date.now(),
+          type,
+          taskTitle,
+          timestamp: new Date().toISOString(),
+        };
+        setActivities(prev => [activity, ...prev].slice(0, 10));
+      };
+
+      const handleSaveTask = (taskData) => {
+        if (editingTask) {
+          // Edit existing task
+          setTasks(prev => prev.map(t => 
+            t.id === editingTask.id 
+              ? { ...t, ...taskData }
+              : t
+          ));
+          addActivity('edited', taskData.title);
+        } else {
+          // Create new task
+          const newTask = {
+            id: Date.now(),
+            ...taskData,
+            status: 'todo',
+            createdAt: new Date().toISOString(),
+          };
+          setTasks(prev => [...prev, newTask]);
+          addActivity('created', taskData.title);
+        }
+        setShowModal(false);
+        setEditingTask(null);
+      };
+
+      const handleDeleteTask = (task) => {
+        if (confirm(`Delete task "${task.title}"?`)) {
+          setTasks(prev => prev.filter(t => t.id !== task.id));
+          addActivity('deleted', task.title);
+        }
+      };
+
+      const handleEditTask = (task) => {
+        setEditingTask(task);
+        setShowModal(true);
+      };
+
+      const handleDragStart = (e, task) => {
+        setDraggedTask(task);
+        e.currentTarget.classList.add('dragging');
+      };
+
+      const handleDragEnd = (e) => {
+        e.currentTarget.classList.remove('dragging');
+      };
+
+      const handleDragOver = (e) => {
+        e.preventDefault();
+      };
+
+      const handleDrop = (e, status) => {
+        e.preventDefault();
+        if (draggedTask && draggedTask.status !== status) {
+          setTasks(prev => prev.map(t =>
+            t.id === draggedTask.id
+              ? { ...t, status }
+              : t
+          ));
+          addActivity('moved', draggedTask.title);
+        }
+        setDraggedTask(null);
+      };
+
+      const handleResetBoard = () => {
+        if (confirm('Are you sure you want to reset the board? This will delete all tasks and activities.')) {
+          setTasks([]);
+          setActivities([]);
+          storage.set('tasks', []);
+          storage.set('activities', []);
+        }
+      };
+
+      const getFilteredTasks = (status) => {
+        let filtered = tasks.filter(t => t.status === status);
+
+        // Search filter
+        if (searchQuery) {
+          filtered = filtered.filter(t =>
+            t.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
+
+        // Priority filter
+        if (filterPriority !== 'all') {
+          filtered = filtered.filter(t => t.priority === filterPriority);
+        }
+
+        // Sort by due date
+        if (sortByDate) {
+          filtered.sort((a, b) => {
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          });
+        }
+
+        return filtered;
+      };
+
+      const formatActivityTime = (timestamp) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return date.toLocaleDateString();
+      };
+
+      if (!isAuthenticated) {
+        return <LoginPage onLogin={handleLogin} />;
+      }
+
+      return (
+        <div className="app-container">
+          <header className="header">
+            <div className="header-left">
+              <div className="logo">TaskFlow</div>
+            </div>
+            <div className="header-right">
+              <button className="btn btn-ghost" onClick={handleResetBoard}>
+                🔄 Reset Board
+              </button>
+              <button className="btn btn-secondary" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </header>
+
+          <main className="main-content">
+            <div className="controls-section">
+              <div className="search-box">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="filter-group">
+                <select
+                  className="filter-select"
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+
+                <button
+                  className={`btn ${sortByDate ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setSortByDate(!sortByDate)}
+                >
+                  📅 Sort by Date
+                </button>
+
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setEditingTask(null);
+                    setShowModal(true);
+                  }}
+                >
+                  + New Task
+                </button>
+              </div>
+            </div>
+
+            <div className="board">
+              {COLUMNS.map(status => {
+                const columnTasks = getFilteredTasks(status);
+                return (
+                  <div
+                    key={status}
+                    className={`column ${status}`}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, status)}
+                  >
+                    <div className="column-header">
+                      <div className="column-title">
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </div>
+                      <div className="column-badge">{columnTasks.length}</div>
+                    </div>
+                    <div className="tasks-container">
+                      {columnTasks.length === 0 ? (
+                        <div className="empty-state">
+                          <div className="empty-state-icon">📝</div>
+                          <div>No tasks here</div>
+                        </div>
+                      ) : (
+                        columnTasks.map(task => (
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            onEdit={handleEditTask}
+                            onDelete={handleDeleteTask}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="activity-section">
+              <div className="activity-header">
+                <div className="activity-title">Recent Activity</div>
+              </div>
+              <div className="activity-list">
+                {activities.length === 0 ? (
+                  <div className="empty-state">
+                    <div>No recent activity</div>
+                  </div>
+                ) : (
+                  activities.map(activity => (
+                    <div key={activity.id} className="activity-item">
+                      <div className={`activity-icon ${activity.type}`}></div>
+                      <div className="activity-text">
+                        Task "{activity.taskTitle}" was {activity.type}
+                      </div>
+                      <div className="activity-time">
+                        {formatActivityTime(activity.timestamp)}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </main>
+
+          {showModal && (
+            <TaskModal
+              task={editingTask}
+              onSave={handleSaveTask}
+              onClose={() => {
+                setShowModal(false);
+                setEditingTask(null);
+              }}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // Render App
+    ReactDOM.render(<TaskBoard />, document.getElementById('root'));
+  </script>
+</body>
+</html>
