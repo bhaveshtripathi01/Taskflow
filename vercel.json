@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd taskflow-app && npm run build",
+  "outputDirectory": "taskflow-app/dist",
+  "framework": "vite"
+}
